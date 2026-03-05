@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Upload, X, Plus, Camera, Star, ArrowLeft, Grid, Tag, Layers, AlertCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../axios/axiosInstance";
+import axios from 'axios';
 
 const ProductUploadForm = ({ onSubmitSuccess }) => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dqzsq98mj";
@@ -341,20 +342,12 @@ const ProductUploadForm = ({ onSubmitSuccess }) => {
               formData.append("file", img.file);
               formData.append("upload_preset", uploadPreset);
               
-              const response = await fetch(
-                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-                {
-                  method: 'POST',
-                  body: formData,
-                }
-              );
-              
-              if (!response.ok) {
-                throw new Error(`Upload failed with status: ${response.status}`);
-              }
-              
-              const data = await response.json();
-              imageUrls.push(data.secure_url);
+              const response = await axios.post(
+  `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+  formData
+);
+
+imageUrls.push(response.data.secure_url);
             } else if (img.url && !img.url.startsWith('blob:')) {
               imageUrls.push(img.url);
             }

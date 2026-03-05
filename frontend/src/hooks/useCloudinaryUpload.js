@@ -1,5 +1,6 @@
 import { useState } from "react";
-import api from '../axios/axiosInstance'
+import api from '../axios/axiosInstance';
+import axios from "axios";
 
 export const useCloudinaryUpload = (uploadPreset) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -19,10 +20,10 @@ export const useCloudinaryUpload = (uploadPreset) => {
     formData.append("file", file);
     formData.append("upload_preset", uploadPreset);
 
-    let cloudName = import.meta.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+    let cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
     try {
-      const response = await api.post(
+      const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         formData
       );

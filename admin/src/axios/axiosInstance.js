@@ -1,8 +1,10 @@
 // axiosInstance.js
 import axios from 'axios';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:5000';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL + '/api',
+  baseURL: `${BACKEND_URL}/api`,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +15,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // ✅ FIXED: Look for 'adminToken' instead of 'token'
     const token = localStorage.getItem('adminToken');
     
     if (token && token !== 'undefined' && token !== 'null') {
@@ -21,6 +22,8 @@ api.interceptors.request.use(
     } else {
       console.warn('⚠️ No valid token found for request:', config.url);
     }
+
+    console.log(`🚀 Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     
     return config;
   },
@@ -47,20 +50,28 @@ api.interceptors.response.use(
       data: error.response?.data
     });
 
-    // Handle 401 errors
+    // Handle 401 - unauthorized
     if (status === 401) {
       localStorage.removeItem('adminToken');
-      
-      // Optional: Trigger logout in your app
       window.dispatchEvent(new CustomEvent('admin-unauthorized'));
+      window.location.href = '/admin/login';
+    }
+
+    // Handle 403 - forbidden
+    if (status === 403) {
+      console.error('❌ Forbidden: You do not have permission to access this resource.');
+    }
+
+    // Handle 500 - server error
+    if (status === 500) {
+      console.error('❌ Internal server error. Please try again later.');
     }
 
     // Create user-friendly error
     const customError = new Error();
     
     if (error.response) {
-      customError.message = error.response.data?.message || 
-                           `Server error: ${status}`;
+      customError.message = error.response.data?.message || `Server error: ${status}`;
       customError.status = status;
     } else if (error.request) {
       customError.message = 'Unable to connect to server. Please check your connection.';
